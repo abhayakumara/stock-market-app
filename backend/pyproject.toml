@@ -1,0 +1,54 @@
+[project]
+name = "trading-backend"
+version = "0.1.0"
+description = "AI trading app backend (Zerodha/Kite Connect): market data, paper-trading engine, API gateway."
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+    "pydantic>=2.6",
+    "pydantic-settings>=2.2",
+    "sqlalchemy>=2.0",
+    "redis>=5.0",
+]
+
+[project.optional-dependencies]
+# Heavier / integration deps kept optional so the core engine + tests install fast.
+kite = ["kiteconnect>=5.0"]
+ai = ["anthropic>=0.40"]
+db = ["psycopg[binary]>=3.1"]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "httpx>=0.27",
+    "ruff>=0.4",
+    "mypy>=1.9",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+# B008: FastAPI's `Depends(...)` in defaults is the documented idiom.
+# UP042: keep the explicit `(str, Enum)` pattern (StrEnum changes str() semantics).
+ignore = ["B008", "UP042"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E501"]  # readable inline expected-value comments in tests
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
