@@ -69,12 +69,7 @@ export default function Dashboard() {
   }, [refresh]);
 
   return (
-    <div className="container">
-      <header className="app">
-        <h1>AI Trading App</h1>
-        <span className="badge">PAPER · Zerodha Kite</span>
-      </header>
-
+    <>
       {account && (
         <div className="panel">
           <div className="stats">
@@ -129,7 +124,7 @@ export default function Dashboard() {
         For education and research only. Not investment advice. Trading involves
         risk of loss.
       </p>
-    </div>
+    </>
   );
 }
 

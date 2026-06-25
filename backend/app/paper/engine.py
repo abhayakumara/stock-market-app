@@ -36,14 +36,16 @@ def _segment_for(product: Product) -> Segment:
 @dataclass(slots=True)
 class AccountSummary:
     cash: Decimal
+    position_value: Decimal  # mark-to-market value of open positions (signed)
     realized_pnl: Decimal
     unrealized_pnl: Decimal
     total_charges: Decimal
 
     @property
     def equity(self) -> Decimal:
-        # cash already reflects all completed cash flows; add open-position mark-to-market.
-        return self.cash + self.unrealized_pnl
+        # cash already reflects all completed cash flows (full notional debited on buys),
+        # so net worth = cash + current market value of holdings.
+        return self.cash + self.position_value
 
 
 class InsufficientFundsError(Exception):
@@ -95,8 +97,12 @@ class PaperBroker:
         realized = sum((p.realized_pnl for p in self.positions.values()), Decimal("0"))
         unrealized = sum((p.unrealized_pnl() for p in self.positions.values()), Decimal("0"))
         charges = sum((p.total_charges for p in self.positions.values()), Decimal("0"))
+        position_value = sum(
+            (p.last_price * p.net_quantity for p in self.positions.values()), Decimal("0")
+        )
         return AccountSummary(
             cash=_q(self.cash),
+            position_value=_q(position_value),
             realized_pnl=_q(realized),
             unrealized_pnl=_q(unrealized),
             total_charges=_q(charges),

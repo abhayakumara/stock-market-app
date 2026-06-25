@@ -12,7 +12,7 @@ from collections.abc import AsyncIterator
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import auth, instruments, market, trading
+from app.api import ai, analysis, auth, instruments, market, strategy, trading
 from app.config import get_settings
 from app.state import AppState
 
@@ -49,6 +49,9 @@ def create_app() -> FastAPI:
     app.include_router(instruments.router)
     app.include_router(trading.router)
     app.include_router(market.router)
+    app.include_router(analysis.router)
+    app.include_router(strategy.router)
+    app.include_router(ai.router)
     return app
 
 

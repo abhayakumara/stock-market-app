@@ -12,6 +12,10 @@ proves itself — promote it to **real-money** trading.
 - **Phase 1 = paper-trading + data core** (foundation everything else depends on).
 - **Stack = Python (FastAPI) + Next.js/React + TypeScript.**
 - **Real money behind a strict promotion gate** (paper criteria + opt-in + caps + kill switch).
+- **Single-user application** (decided): one paper account, one market hub, one candle
+  aggregator per process. No per-user scoping or auth — the local operator is the only
+  user. State lives in `app/state.py` behind small interfaces so DB persistence can be
+  added later without reshaping callers.
 
 ### Hard constraints from Zerodha (shape the architecture)
 
@@ -35,11 +39,15 @@ Next.js frontend ──HTTPS/WSS──► FastAPI gateway
 
 ## Phases
 
-- **Phase 0** — repo scaffold, docker-compose (Postgres+TimescaleDB, Redis), config, CI.
-- **Phase 1 (current)** — Kite auth/session, instrument master, market-data service,
+- **Phase 0 ✅** — repo scaffold, docker-compose (Postgres+TimescaleDB, Redis), config, CI.
+- **Phase 1 ✅** — Kite auth/session, instrument master, market-data service,
   **paper-trading engine** (core), frontend MVP, fill-engine tests.
-- **Phase 2** — indicators, charts, screeners, option-chain analytics, AI commentary.
-- **Phase 3** — strategy DSL + event-driven backtester (shares fill model with paper engine).
+- **Phase 2 ✅** — indicator library (SMA/EMA/RSI/MACD/Bollinger/ATR/VWAP), candle
+  aggregation + synthetic/Kite history, screeners, candlestick + RSI charts, AI market
+  commentary (`/analysis/*`, `/ai/commentary`).
+- **Phase 3 ✅** — rule-DSL strategies + templates, event-driven backtester that reuses
+  the paper-engine fill/charges model, report-card metrics, AI NL→strategy authoring
+  (`/strategy/*`, `/ai/strategy`); Analysis + Backtest UI pages.
 - **Phase 4** — real-money trading behind the promotion gate; live-order service; risk controls.
 - **Phase 5** — AI coach, journaling, alerts, observability, productionization.
 

@@ -69,4 +69,20 @@ npm run dev                     # http://localhost:3000
 
 ## Status
 
-Phase 1 (paper-trading + data core) is the current focus. See `docs/PLAN.md`.
+Single-user application. Implemented so far (see `docs/PLAN.md`):
+
+- **Phase 0–1** — Kite auth flow, live/mock market-data hub, in-house paper-trading
+  engine (slippage + brokerage/STT/charges model), REST + WebSocket gateway, trade UI.
+- **Phase 2** — technical indicators (SMA/EMA/RSI/MACD/Bollinger/ATR/VWAP), candle
+  aggregation + synthetic/Kite history, screeners, candlestick + RSI charts, AI market
+  commentary. Endpoints under `/analysis/*` and `/ai/commentary`.
+- **Phase 3** — rule-DSL strategies + built-in templates, an event-driven backtester
+  that reuses the paper-engine fill/charges model (backtest↔paper parity), strategy
+  report-card metrics, and AI natural-language → strategy authoring. Endpoints under
+  `/strategy/*` and `/ai/strategy`; **Analysis** and **Backtest** pages in the UI.
+
+Next: **Phase 4** — real-money trading behind the strict promotion gate (live-order
+service on the static-IP host, position caps, kill switch).
+
+The whole stack runs **offline** (synthetic market data + deterministic backtests) with
+no Zerodha account; add Kite/Anthropic keys to enable live data and AI features.

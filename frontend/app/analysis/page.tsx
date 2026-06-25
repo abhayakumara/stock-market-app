@@ -1,0 +1,184 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { CandleChart, RSIChart } from "@/components/Charts";
+import {
+  Candle,
+  Indicators,
+  Instrument,
+  ScanHit,
+  api,
+} from "@/lib/api";
+
+const COUNT = 200;
+const INTERVAL = 5;
+
+const SCAN_LABELS: Record<string, string> = {
+  rsi_oversold: "RSI oversold (<30)",
+  rsi_overbought: "RSI overbought (>70)",
+  golden_cross: "Golden cross (20/50)",
+  above_200sma: "Above 200 SMA",
+  breakout_20: "20-bar breakout",
+};
+
+export default function AnalysisPage() {
+  const [instruments, setInstruments] = useState<Instrument[]>([]);
+  const [token, setToken] = useState<number | null>(null);
+  const [candles, setCandles] = useState<Candle[]>([]);
+  const [ind, setInd] = useState<Indicators | null>(null);
+
+  const [scan, setScan] = useState("rsi_oversold");
+  const [hits, setHits] = useState<ScanHit[] | null>(null);
+
+  const [commentary, setCommentary] = useState("");
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiErr, setAiErr] = useState("");
+
+  useEffect(() => {
+    api.instruments().then((xs) => {
+      setInstruments(xs);
+      setToken((t) => t ?? xs[0]?.instrument_token ?? null);
+    });
+  }, []);
+
+  const load = useCallback((tk: number) => {
+    Promise.all([
+      api.candles(tk, COUNT, INTERVAL),
+      api.indicators(tk, COUNT, INTERVAL),
+    ]).then(([c, i]) => {
+      setCandles(c.candles);
+      setInd(i);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (token !== null) load(token);
+  }, [token, load]);
+
+  const runScan = useCallback(() => {
+    api.screener(scan).then((r) => setHits(r.hits));
+  }, [scan]);
+
+  async function getCommentary() {
+    if (token === null) return;
+    setAiBusy(true);
+    setAiErr("");
+    setCommentary("");
+    try {
+      const r = await api.aiCommentary(token);
+      setCommentary(r.commentary);
+    } catch (e) {
+      setAiErr(e instanceof Error ? e.message : "AI unavailable");
+    } finally {
+      setAiBusy(false);
+    }
+  }
+
+  const symbol =
+    instruments.find((i) => i.instrument_token === token)?.tradingsymbol ?? "";
+
+  return (
+    <>
+      <div className="panel">
+        <div className="toolbar">
+          <div>
+            <label>Instrument</label>
+            <select
+              value={token ?? ""}
+              onChange={(e) => setToken(Number(e.target.value))}
+            >
+              {instruments.map((i) => (
+                <option key={i.instrument_token} value={i.instrument_token}>
+                  {i.tradingsymbol} — {i.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="legend">
+            <span className="key sma20">SMA20</span>
+            <span className="key sma50">SMA50</span>
+            <span className="key boll">Bollinger</span>
+          </div>
+        </div>
+
+        <CandleChart
+          candles={candles}
+          overlays={
+            ind
+              ? [
+                  { name: "sma20", color: "#4c8dff", data: ind.sma20 },
+                  { name: "sma50", color: "#f5a623", data: ind.sma50 },
+                  { name: "bu", color: "#7d8aa0", data: ind.boll_upper },
+                  { name: "bl", color: "#7d8aa0", data: ind.boll_lower },
+                ]
+              : []
+          }
+        />
+        <div className="subtitle">RSI (14)</div>
+        {ind && <RSIChart rsi={ind.rsi14} />}
+      </div>
+
+      <div className="grid">
+        <div className="panel">
+          <h2>Screener</h2>
+          <div className="toolbar">
+            <select value={scan} onChange={(e) => setScan(e.target.value)}>
+              {Object.entries(SCAN_LABELS).map(([id, label]) => (
+                <option key={id} value={id}>
+                  {label}
+                </option>
+              ))}
+            </select>
+            <button className="primary" onClick={runScan}>
+              Run scan
+            </button>
+          </div>
+          {hits !== null &&
+            (hits.length === 0 ? (
+              <p className="muted">No matches right now.</p>
+            ) : (
+              <table>
+                <thead>
+                  <tr>
+                    <th>Symbol</th>
+                    <th>Detail</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {hits.map((h) => (
+                    <tr key={h.instrument_token}>
+                      <td>{h.tradingsymbol}</td>
+                      <td>
+                        {Object.entries(h.detail)
+                          .map(([k, v]) => `${k}: ${v}`)
+                          .join(", ")}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ))}
+        </div>
+
+        <div className="panel">
+          <h2>AI commentary</h2>
+          <button className="primary" disabled={aiBusy} onClick={getCommentary}>
+            {aiBusy ? "Analyzing…" : `Analyze ${symbol}`}
+          </button>
+          {commentary && <p className="ai-text">{commentary}</p>}
+          {aiErr && (
+            <p className="muted">
+              {aiErr.includes("ANTHROPIC") || aiErr.includes("anthropic")
+                ? "Set ANTHROPIC_API_KEY (and install the AI extra) to enable Claude commentary."
+                : aiErr}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <p className="disclaimer">
+        For education and research only. Not investment advice.
+      </p>
+    </>
+  );
+}

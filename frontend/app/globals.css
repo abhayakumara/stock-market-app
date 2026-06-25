@@ -192,3 +192,156 @@ button:disabled {
   margin-top: 24px;
   text-align: center;
 }
+
+/* --- Top nav --- */
+.topnav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.topnav .brand {
+  font-weight: 700;
+}
+
+.topnav .links {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+}
+
+.topnav .links a {
+  color: var(--muted);
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.topnav .links a:hover {
+  background: var(--panel-2);
+  color: var(--text);
+}
+
+.topnav .links a.active {
+  background: var(--panel-2);
+  color: var(--text);
+}
+
+/* --- Shared controls --- */
+.muted {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.subtitle {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 14px 0 4px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.toolbar label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+select,
+input[type="number"] {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
+button.primary {
+  background: var(--accent);
+}
+
+.legend {
+  margin-left: auto;
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.legend .key::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 2px;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+.legend .sma20::before {
+  background: #4c8dff;
+}
+.legend .sma50::before {
+  background: #f5a623;
+}
+.legend .boll::before {
+  background: #7d8aa0;
+}
+
+/* --- Charts --- */
+.chart {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: var(--panel-2);
+  border-radius: 8px;
+}
+
+.chart .grid {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.chart .grid.band {
+  stroke-dasharray: 4 4;
+}
+
+.chart-empty {
+  padding: 40px;
+  text-align: center;
+  color: var(--muted);
+  background: var(--panel-2);
+  border-radius: 8px;
+}
+
+.ai-text {
+  margin-top: 12px;
+  line-height: 1.5;
+  font-size: 14px;
+  white-space: pre-wrap;
+}
+
+/* --- Backtest --- */
+.bt-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.stats.wrap {
+  grid-template-columns: repeat(4, 1fr);
+}

@@ -58,6 +58,97 @@ export interface PlaceOrder {
   trigger_price?: number;
 }
 
+// --- Analysis ---
+
+export interface Candle {
+  timestamp: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+export type Series = (number | null)[];
+
+export interface Indicators {
+  instrument_token: number;
+  timestamps: string[];
+  close: number[];
+  sma20: Series;
+  sma50: Series;
+  ema20: Series;
+  rsi14: Series;
+  macd: Series;
+  macd_signal: Series;
+  macd_hist: Series;
+  boll_upper: Series;
+  boll_mid: Series;
+  boll_lower: Series;
+}
+
+export interface ScanHit {
+  instrument_token: number;
+  tradingsymbol: string;
+  detail: Record<string, number>;
+}
+
+export interface ScreenerResult {
+  scan: string;
+  available_scans: string[];
+  hits: ScanHit[];
+}
+
+// --- Strategy / backtest ---
+
+export interface Template {
+  id: string;
+  name: string;
+  description: string;
+  config: Record<string, unknown>;
+}
+
+export interface ReportCard {
+  initial_capital: number;
+  final_equity: number;
+  total_return_pct: number;
+  num_trades: number;
+  win_rate: number;
+  profit_factor: number | null;
+  expectancy: number;
+  avg_win: number;
+  avg_loss: number;
+  max_drawdown_pct: number;
+  sharpe: number;
+  total_charges: number;
+}
+
+export interface BacktestResult {
+  strategy: string;
+  report: ReportCard;
+  equity_curve: { timestamp: string; equity: number }[];
+  trades: {
+    timestamp: string;
+    side: string;
+    quantity: number;
+    price: string;
+    charges: string;
+  }[];
+  warmup: number;
+}
+
+export interface BacktestRequest {
+  instrument_token: number;
+  template?: string;
+  config?: Record<string, unknown>;
+  quantity?: number;
+  initial_capital?: number;
+  product?: "MIS" | "CNC";
+  candle_count?: number;
+  interval_minutes?: number;
+  warmup?: number;
+}
+
 async function json<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -77,4 +168,35 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     }).then(json<Order>),
+
+  candles: (token: number, count = 300, interval = 5) =>
+    fetch(
+      `${API_URL}/analysis/candles/${token}?count=${count}&interval_minutes=${interval}`,
+    ).then(json<{ candles: Candle[] }>),
+  indicators: (token: number, count = 300, interval = 5) =>
+    fetch(
+      `${API_URL}/analysis/indicators/${token}?count=${count}&interval_minutes=${interval}`,
+    ).then(json<Indicators>),
+  screener: (scan: string) =>
+    fetch(`${API_URL}/analysis/screener?scan=${scan}`).then(json<ScreenerResult>),
+
+  templates: () =>
+    fetch(`${API_URL}/strategy/templates`).then(json<{ templates: Template[] }>),
+  backtest: (payload: BacktestRequest) =>
+    fetch(`${API_URL}/strategy/backtest`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }).then(json<BacktestResult>),
+
+  aiCommentary: (token: number) =>
+    fetch(`${API_URL}/ai/commentary/${token}`).then(
+      json<{ symbol: string; commentary: string }>,
+    ),
+  aiStrategy: (prompt: string) =>
+    fetch(`${API_URL}/ai/strategy`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt }),
+    }).then(json<{ config: Record<string, unknown> }>),
 };
