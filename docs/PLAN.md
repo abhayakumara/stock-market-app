@@ -48,8 +48,12 @@ Next.js frontend ──HTTPS/WSS──► FastAPI gateway
 - **Phase 3 ✅** — rule-DSL strategies + templates, event-driven backtester that reuses
   the paper-engine fill/charges model, report-card metrics, AI NL→strategy authoring
   (`/strategy/*`, `/ai/strategy`); Analysis + Backtest UI pages.
-- **Phase 4** — real-money trading behind the promotion gate; live-order service; risk controls.
-- **Phase 5** — AI coach, journaling, alerts, observability, productionization.
+- **Phase 4 ✅** — real-money trading behind a strict, layered gate (acknowledge →
+  promote → arm/kill-switch → risk caps); `LiveBroker` (Kite, static-IP host); risk
+  manager + promotion evaluator; `/live/*` endpoints; guided Live UI. See `docs/RISKS.md`.
+- **Phase 5 ✅** — AI coach + trade review, trade journal, price alerts on the live feed,
+  `/metrics` observability; Coach UI. (Productionization items — Redis fan-out, DB
+  persistence, encrypted token — tracked in `docs/DEPLOYMENT.md`.)
 
 ## Feature set
 

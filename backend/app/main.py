@@ -7,14 +7,29 @@ REST + WebSocket routers.
 from __future__ import annotations
 
 import contextlib
+import logging
 from collections.abc import AsyncIterator
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import ai, analysis, auth, instruments, market, strategy, trading
+from app.api import (
+    ai,
+    alerts,
+    analysis,
+    auth,
+    instruments,
+    journal,
+    live,
+    market,
+    strategy,
+    trading,
+)
+from app.api.deps import get_state
 from app.config import get_settings
 from app.state import AppState
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 
 
 @contextlib.asynccontextmanager
@@ -42,8 +57,12 @@ def create_app() -> FastAPI:
 
     @app.get("/health", tags=["meta"])
     def health() -> dict:
-        live = settings.kite_configured and not settings.use_mock_market_data
-        return {"status": "ok", "mode": "live" if live else "mock"}
+        live_data = settings.kite_configured and not settings.use_mock_market_data
+        return {"status": "ok", "mode": "live" if live_data else "mock"}
+
+    @app.get("/metrics", tags=["meta"])
+    def metrics(state: AppState = Depends(get_state)) -> dict:
+        return state.metrics.snapshot()
 
     app.include_router(auth.router)
     app.include_router(instruments.router)
@@ -52,6 +71,9 @@ def create_app() -> FastAPI:
     app.include_router(analysis.router)
     app.include_router(strategy.router)
     app.include_router(ai.router)
+    app.include_router(live.router)
+    app.include_router(journal.router)
+    app.include_router(alerts.router)
     return app
 
 

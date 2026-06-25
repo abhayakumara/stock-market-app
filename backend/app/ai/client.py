@@ -106,6 +106,47 @@ class AIClient:
         build_strategy(config)  # validate; raises ValueError on a bad config
         return config
 
+    # --------------------------------------------------------------- coaching
+    def coach(self, account: dict, positions: list[dict], trades_summary: dict) -> str:
+        """Educational coaching on the current account state and trading behavior."""
+        client = self._messages()
+        system = (
+            "You are a disciplined trading coach for a retail trader using a paper-trading "
+            "app to learn. Given their account summary, open positions, and recent trade "
+            "stats, give brief, constructive coaching focused on RISK DISCIPLINE: position "
+            "sizing, risk/reward, over-trading, and cutting losses. Be encouraging but "
+            "honest. 4-6 sentences. Do NOT give specific buy/sell calls or price targets. "
+            "End with: 'Educational only — not investment advice.'"
+        )
+        payload = {"account": account, "positions": positions, "recent": trades_summary}
+        resp = client.messages.create(
+            model=MODEL,
+            max_tokens=700,
+            thinking={"type": "adaptive"},
+            system=system,
+            messages=[{"role": "user", "content": json.dumps(payload)}],
+        )
+        return self._text(resp)
+
+    def review_trades(self, trades_summary: dict) -> str:
+        """Auto-review of recent trading: patterns, strengths, and what to improve."""
+        client = self._messages()
+        system = (
+            "You are reviewing a retail trader's recent trades for a learning journal. "
+            "Identify behavioral patterns (e.g. win rate vs average win/loss, signs of "
+            "over-trading or revenge trading) and give 3-5 specific, actionable lessons. "
+            "Be concrete and educational. End with: 'Educational only — not investment "
+            "advice.'"
+        )
+        resp = client.messages.create(
+            model=MODEL,
+            max_tokens=800,
+            thinking={"type": "adaptive"},
+            system=system,
+            messages=[{"role": "user", "content": json.dumps(trades_summary)}],
+        )
+        return self._text(resp)
+
 
 def _extract_json(text: str) -> dict:
     text = text.strip()

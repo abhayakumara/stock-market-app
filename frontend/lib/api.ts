@@ -149,6 +149,57 @@ export interface BacktestRequest {
   warmup?: number;
 }
 
+// --- Live trading / risk / promotion ---
+
+export interface RiskLimitsDto {
+  max_order_value: string;
+  max_position_value: string;
+  max_daily_loss: string;
+  max_open_positions: number;
+}
+
+export interface LiveStatus {
+  configured: boolean;
+  acknowledged: boolean;
+  armed: boolean;
+  promoted: string[];
+  daily_loss: string;
+  limits: RiskLimitsDto;
+  mock_mode: boolean;
+}
+
+export interface PromotionCheck {
+  name: string;
+  passed: boolean;
+  actual: number | null;
+  threshold: number;
+  detail: string;
+}
+
+export interface PromotionResult {
+  eligible: boolean;
+  checks: PromotionCheck[];
+}
+
+export interface Alert {
+  id: number;
+  instrument_token: number;
+  tradingsymbol: string;
+  op: ">" | "<";
+  price: string;
+  note: string;
+  active: boolean;
+  triggered_at: string | null;
+  triggered_price: string | null;
+}
+
+export interface JournalEntry {
+  id: number;
+  text: string;
+  tags: string[];
+  created_at: string;
+}
+
 async function json<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -199,4 +250,66 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prompt }),
     }).then(json<{ config: Record<string, unknown> }>),
+  aiCoach: () => fetch(`${API_URL}/ai/coach`).then(json<{ coaching: string }>),
+  aiReview: () => fetch(`${API_URL}/ai/review`).then(json<{ review: string }>),
+
+  // Live trading
+  liveStatus: () => fetch(`${API_URL}/live/status`).then(json<LiveStatus>),
+  liveCriteria: () =>
+    fetch(`${API_URL}/live/criteria`).then(json<Record<string, number>>),
+  acknowledge: () =>
+    fetch(`${API_URL}/live/acknowledge`, { method: "POST" }).then(json<LiveStatus>),
+  arm: () => fetch(`${API_URL}/live/arm`, { method: "POST" }).then(json<LiveStatus>),
+  disarm: () =>
+    fetch(`${API_URL}/live/disarm`, { method: "POST" }).then(json<LiveStatus>),
+  setRisk: (limits: {
+    max_order_value: number;
+    max_position_value: number;
+    max_daily_loss: number;
+    max_open_positions: number;
+  }) =>
+    fetch(`${API_URL}/live/risk`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(limits),
+    }).then(json<LiveStatus>),
+  evaluate: (report: ReportCard) =>
+    fetch(`${API_URL}/live/evaluate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ report }),
+    }).then(json<PromotionResult>),
+  promote: (strategy_id: string, report: ReportCard) =>
+    fetch(`${API_URL}/live/promote`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ strategy_id, report }),
+    }).then(json<LiveStatus & { promoted: string[] }>),
+  placeLiveOrder: (payload: PlaceOrder & { strategy_id?: string }) =>
+    fetch(`${API_URL}/live/orders`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }).then(json<{ order_id: string; status: string; symbol: string }>),
+
+  // Alerts
+  alerts: () =>
+    fetch(`${API_URL}/alerts`).then(json<{ alerts: Alert[]; triggered: Alert[] }>),
+  addAlert: (payload: { instrument_token: number; op: ">" | "<"; price: number; note?: string }) =>
+    fetch(`${API_URL}/alerts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }).then(json<Alert>),
+  removeAlert: (id: number) =>
+    fetch(`${API_URL}/alerts/${id}`, { method: "DELETE" }).then(json<{ removed: number }>),
+
+  // Journal
+  journal: () => fetch(`${API_URL}/journal`).then(json<{ entries: JournalEntry[] }>),
+  addJournal: (text: string, tags: string[] = []) =>
+    fetch(`${API_URL}/journal`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, tags }),
+    }).then(json<JournalEntry>),
 };

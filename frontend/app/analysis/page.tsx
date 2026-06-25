@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { CandleChart, RSIChart } from "@/components/Charts";
 import {
+  Alert,
   Candle,
   Indicators,
   Instrument,
@@ -176,9 +177,102 @@ export default function AnalysisPage() {
         </div>
       </div>
 
+      <AlertsPanel token={token} symbol={symbol} />
+
       <p className="disclaimer">
         For education and research only. Not investment advice.
       </p>
     </>
+  );
+}
+
+function AlertsPanel({ token, symbol }: { token: number | null; symbol: string }) {
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [triggered, setTriggered] = useState<Alert[]>([]);
+  const [op, setOp] = useState<">" | "<">(">");
+  const [price, setPrice] = useState("");
+
+  const load = useCallback(() => {
+    api.alerts().then((r) => {
+      setAlerts(r.alerts);
+      setTriggered(r.triggered);
+    });
+  }, []);
+
+  useEffect(() => {
+    load();
+    const id = setInterval(load, 4000);
+    return () => clearInterval(id);
+  }, [load]);
+
+  async function add() {
+    if (token === null || !price) return;
+    await api.addAlert({ instrument_token: token, op, price: parseFloat(price) });
+    setPrice("");
+    load();
+  }
+
+  return (
+    <div className="panel">
+      <h2>Price alerts</h2>
+      <div className="toolbar">
+        <span className="muted">
+          Alert on <strong>{symbol}</strong> when price
+        </span>
+        <select value={op} onChange={(e) => setOp(e.target.value as ">" | "<")}>
+          <option value=">">rises above</option>
+          <option value="<">falls below</option>
+        </select>
+        <input
+          type="number"
+          placeholder="price"
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+        />
+        <button className="primary" onClick={add}>
+          Add alert
+        </button>
+      </div>
+      {alerts.length > 0 && (
+        <table>
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th>Condition</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {alerts.map((a) => (
+              <tr key={a.id}>
+                <td>{a.tradingsymbol}</td>
+                <td>
+                  {a.op} {a.price}
+                </td>
+                <td>{a.active ? "active" : "triggered"}</td>
+                <td>
+                  <button
+                    className="link"
+                    onClick={() => api.removeAlert(a.id).then(load)}
+                  >
+                    remove
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      {triggered.length > 0 && (
+        <p className="ok">
+          🔔 Recently triggered:{" "}
+          {triggered
+            .slice(0, 5)
+            .map((a) => `${a.tradingsymbol} ${a.op} ${a.price}`)
+            .join(", ")}
+        </p>
+      )}
+    </div>
   );
 }

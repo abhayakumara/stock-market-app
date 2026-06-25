@@ -5,8 +5,10 @@ user's **Zerodha** account via the official **Kite Connect** API, lets users ana
 markets and test strategies with **paper (virtual) money**, and — only after a strategy
 proves itself through a strict promotion gate — promote it to **real-money** trading.
 
-> ⚠️ This software is for education and research. It is **not** investment advice.
-> Trading involves risk of loss. Use real-money features at your own risk.
+> ⚠️ **This software is for education and research. It is NOT investment advice.**
+> Trading involves a real risk of loss — with leverage you can lose more than you put in.
+> Before enabling any real-money ("Live") feature, **read [`docs/RISKS.md`](docs/RISKS.md)
+> in full.** Use real-money features entirely at your own risk. No warranty.
 
 ## Why this architecture
 
@@ -80,9 +82,18 @@ Single-user application. Implemented so far (see `docs/PLAN.md`):
   that reuses the paper-engine fill/charges model (backtest↔paper parity), strategy
   report-card metrics, and AI natural-language → strategy authoring. Endpoints under
   `/strategy/*` and `/ai/strategy`; **Analysis** and **Backtest** pages in the UI.
+- **Phase 4** — real-money trading behind a **strict, layered gate**: risk-disclosure
+  acknowledgement → promotion gate (a strategy must clear performance criteria) → kill
+  switch (armed/disarmed, default OFF) → per-order/position/daily-loss/open-position risk
+  caps. `LiveBroker` places real Kite orders only on the static-IP host. A guided **Live**
+  page walks through every step with prominent warnings. Endpoints under `/live/*`.
+- **Phase 5** — AI trading **coach** + trade auto-**review**, a trade **journal**, price
+  **alerts** on the live feed, and **/metrics** observability. **Coach** page in the UI.
 
-Next: **Phase 4** — real-money trading behind the strict promotion gate (live-order
-service on the static-IP host, position caps, kill switch).
+See [`docs/RISKS.md`](docs/RISKS.md) for the full risk disclosure and
+[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the live-trading runbook (static IP, daily
+login, going-live checklist).
 
 The whole stack runs **offline** (synthetic market data + deterministic backtests) with
-no Zerodha account; add Kite/Anthropic keys to enable live data and AI features.
+no Zerodha account; add Kite/Anthropic keys to enable live data and AI features. Real
+orders additionally require the static-IP setup and arming the kill switch.

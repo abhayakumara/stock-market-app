@@ -12,6 +12,9 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.config import Settings, get_settings
 from app.integrations.kite import KiteAuth
+from app.state import AppState
+
+from .deps import get_state
 
 router = APIRouter(prefix="/auth/kite", tags=["auth"])
 
@@ -30,7 +33,11 @@ def login(settings: Settings = Depends(get_settings)) -> dict:
 
 
 @router.get("/callback")
-def callback(request_token: str, settings: Settings = Depends(get_settings)) -> dict:
+def callback(
+    request_token: str,
+    settings: Settings = Depends(get_settings),
+    state: AppState = Depends(get_state),
+) -> dict:
     if not settings.kite_configured:
         raise HTTPException(status_code=503, detail="Kite API keys not configured")
     try:
@@ -39,5 +46,7 @@ def callback(request_token: str, settings: Settings = Depends(get_settings)) -> 
         )
     except ImportError as exc:
         raise HTTPException(status_code=503, detail="kiteconnect not installed") from exc
-    # NOTE: persist session.access_token encrypted, per user, in a later phase.
+    # Store the daily token in memory; this also flips live.configured = True (kill
+    # switch still defaults OFF). NOTE: encrypt + persist per the plan in a later phase.
+    state.set_kite_access_token(session.access_token)
     return {"user_id": session.user_id, "user_name": session.user_name, "connected": True}

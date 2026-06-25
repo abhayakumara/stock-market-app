@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from app.alerts import AlertBook
 from app.analysis.candles import (
     Candle,
     CandleAggregator,
@@ -18,9 +19,12 @@ from app.analysis.candles import (
 )
 from app.config import Settings
 from app.domain.models import Tick
+from app.journal import Journal
+from app.live.controller import LiveController
 from app.marketdata.hub import MarketHub
 from app.marketdata.instruments import BY_TOKEN, SEED_INSTRUMENTS
 from app.marketdata.source import KiteTickSource, MockReplaySource, TickSource
+from app.observability import Metrics
 from app.paper.engine import PaperBroker
 
 
@@ -34,14 +38,27 @@ class AppState:
         self.strategies: list[dict] = []
         self._kite_access_token: str = ""
 
+        # Phase 4/5 services.
+        self.live = LiveController(configured=False)
+        self.journal = Journal()
+        self.alerts = AlertBook()
+        self.metrics = Metrics()
+        # Most recently triggered alerts, newest first (bounded).
+        self.triggered_alerts: list = []
+
         self.hub = MarketHub(self._build_source(settings))
-        # Every tick feeds both the broker (fills resting orders) and the aggregator
-        # (builds live candles for the chart).
+        # Every tick feeds the broker (fills resting orders), the aggregator (live
+        # candles), and the alert book; metrics count throughput.
         self.hub.on_tick = self._on_tick
 
     def _on_tick(self, tick: Tick) -> None:
         self.broker.on_tick(tick)
         self.aggregator.add(tick)
+        self.metrics.inc("ticks_processed")
+        fired = self.alerts.evaluate(tick)
+        if fired:
+            self.metrics.inc("alerts_triggered", len(fired))
+            self.triggered_alerts = (fired + self.triggered_alerts)[:50]
 
     def _build_source(self, settings: Settings) -> TickSource:
         if settings.use_mock_market_data or not settings.kite_configured:
@@ -50,8 +67,14 @@ class AppState:
         return KiteTickSource(settings.kite_api_key, access_token="", tokens=tokens)
 
     def set_kite_access_token(self, token: str) -> None:
-        """Store the daily Kite access token (in memory) for historical-data calls."""
+        """Store the daily Kite access token (in memory) and mark live trading as
+        configured (keys present + logged in). The kill switch still defaults to OFF."""
         self._kite_access_token = token
+        self.live.configured = bool(token) and self.settings.kite_configured
+
+    @property
+    def kite_access_token(self) -> str:
+        return self._kite_access_token
 
     def get_candles(
         self, instrument_token: int, count: int = 300, interval_minutes: int = 5

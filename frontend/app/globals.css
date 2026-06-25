@@ -345,3 +345,278 @@ button.primary {
 .stats.wrap {
   grid-template-columns: repeat(4, 1fr);
 }
+
+/* --- Notices --- */
+.warn {
+  background: rgba(245, 166, 35, 0.12);
+  border: 1px solid #6b531a;
+  color: #ffd591;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.ok {
+  color: var(--green);
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.warn code,
+.disclaimer code,
+.ai-text code {
+  background: var(--panel-2);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+/* --- Live banner + buttons --- */
+.live-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  border: 1px solid var(--border);
+}
+
+.live-banner .muted {
+  margin-left: 8px;
+}
+
+.live-banner.safe {
+  background: rgba(46, 204, 113, 0.08);
+  border-color: #1f5e3a;
+}
+
+.live-banner.armed {
+  background: rgba(255, 92, 92, 0.12);
+  border-color: #7a2626;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    border-color: #7a2626;
+  }
+  50% {
+    border-color: var(--red);
+  }
+}
+
+button.danger {
+  background: var(--red);
+}
+
+button.big {
+  padding: 14px 18px;
+  font-size: 15px;
+}
+
+/* --- Stepper --- */
+.stepper {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.stepper .step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.stepper .step.done {
+  color: var(--text);
+  border-color: #1f5e3a;
+}
+
+.stepper .dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--panel-2);
+  font-size: 12px;
+}
+
+.stepper .step.done .dot {
+  background: var(--green);
+  color: #06210f;
+}
+
+/* --- Forms / grids --- */
+label.check {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 14px;
+  margin: 12px 0;
+  line-height: 1.4;
+}
+
+label.check input {
+  margin-top: 3px;
+}
+
+.risk-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.risk-grid label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.risk-grid input,
+.risk-grid select {
+  width: 100%;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
+/* --- Promotion checklist --- */
+.checklist {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0;
+}
+
+.checklist li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.checklist li.pass > span:first-child {
+  color: var(--green);
+}
+
+.checklist li.fail > span:first-child {
+  color: var(--red);
+}
+
+.checklist .cname {
+  flex: 1;
+}
+
+/* --- Real order ticket --- */
+.real-ticket {
+  border: 1px solid #7a2626;
+}
+
+.real-ticket.locked {
+  opacity: 0.7;
+}
+
+.real-ticket h2 {
+  color: var(--red);
+}
+
+/* --- Disclosure --- */
+.disclosure ul {
+  margin: 8px 0;
+  padding-left: 18px;
+}
+
+.disclosure li {
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+
+.disclosure.compact li {
+  font-size: 12px;
+}
+
+details.panel summary {
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* --- Journal --- */
+.journal-form {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.journal-form textarea {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 10px;
+  font-size: 14px;
+  min-height: 70px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.journal-form input {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
+.journal {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.journal li {
+  border-bottom: 1px solid var(--border);
+  padding: 10px 0;
+  font-size: 14px;
+}
+
+.jmeta {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.tag {
+  background: var(--panel-2);
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin-left: 6px;
+  font-size: 11px;
+}
+
+button.link {
+  background: none;
+  color: var(--accent);
+  padding: 0;
+  font-weight: 400;
+}

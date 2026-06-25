@@ -7,6 +7,8 @@ const LINKS = [
   { href: "/", label: "Trade" },
   { href: "/analysis", label: "Analysis" },
   { href: "/backtest", label: "Backtest" },
+  { href: "/live", label: "Live" },
+  { href: "/coach", label: "Coach" },
 ];
 
 export function Nav() {
