@@ -50,6 +50,85 @@ TEMPLATES: dict[str, dict[str, Any]] = {
         "exit_long": [{"left": "close", "op": ">", "right": "mid"}],
         "allow_short": False,
     },
+    # --- Beginner-friendly presets (plain-English) ---------------------------------
+    "price_above_average": {
+        "name": "Ride the trend (price above its average)",
+        "description": (
+            "Buy when the price is above its own average of the last 50 bars, which "
+            "usually means it's in an up-trend. Sell when it slips back below the "
+            "average. Simple way to stay in while things are going up and step aside "
+            "when they turn down."
+        ),
+        "indicators": {"average": {"kind": "sma", "period": 50}},
+        "entry_long": [{"left": "close", "op": ">", "right": "average"}],
+        "exit_long": [{"left": "close", "op": "<", "right": "average"}],
+        "allow_short": False,
+    },
+    "ema_crossover": {
+        "name": "Fast vs slow average (quick trend change)",
+        "description": (
+            "Watches a fast average (last 12 bars) and a slow one (last 26 bars). "
+            "When the fast average rises above the slow one, the recent mood is turning "
+            "up, so buy. When it drops back below, sell. Reacts a bit quicker than the "
+            "plain 20/50 crossover."
+        ),
+        "indicators": {
+            "fast": {"kind": "ema", "period": 12},
+            "slow": {"kind": "ema", "period": 26},
+        },
+        "entry_long": [{"left": "fast", "op": ">", "right": "slow"}],
+        "exit_long": [{"left": "fast", "op": "<", "right": "slow"}],
+        "allow_short": False,
+    },
+    "volume_breakout": {
+        "name": "Big-volume push (crowd is buying)",
+        "description": (
+            "Buy only when two things happen together: a lot more shares than usual "
+            "change hands (today's volume is over twice the recent average) AND the "
+            "price is above its short-term average, i.e. moving up. Heavy volume behind "
+            "a rising price means real interest, not a random wiggle. Sell when the "
+            "price falls back below its short-term average."
+        ),
+        "indicators": {
+            "vol_threshold": {"kind": "vol_sma", "period": 20, "mult": 2.0},
+            "trend": {"kind": "sma", "period": 10},
+        },
+        "entry_long": [
+            {"left": "volume", "op": ">", "right": "vol_threshold"},
+            {"left": "close", "op": ">", "right": "trend"},
+        ],
+        "exit_long": [{"left": "close", "op": "<", "right": "trend"}],
+        "allow_short": False,
+    },
+    "vwap_trend": {
+        "name": "Above the fair price (VWAP)",
+        "description": (
+            "VWAP is the average price weighted by how many shares traded at each "
+            "level, so it's a good 'fair value' for the day. When the price is above "
+            "VWAP, buyers are in control, so buy. When it drops below VWAP, step out. "
+            "Popular with intraday traders."
+        ),
+        "indicators": {"vwap": {"kind": "vwap"}},
+        "entry_long": [{"left": "close", "op": ">", "right": "vwap"}],
+        "exit_long": [{"left": "close", "op": "<", "right": "vwap"}],
+        "allow_short": False,
+    },
+    "breakout_high": {
+        "name": "New-high breakout (price escapes its range)",
+        "description": (
+            "Buy when the price climbs above the highest point of the last 20 bars — "
+            "it has broken out of its recent range to a new high, which can kick off a "
+            "fresh move up. Get out if it sinks below the lowest point of the last 10 "
+            "bars, meaning the breakout failed."
+        ),
+        "indicators": {
+            "range_high": {"kind": "highest", "period": 20},
+            "range_low": {"kind": "lowest", "period": 10},
+        },
+        "entry_long": [{"left": "close", "op": ">", "right": "range_high"}],
+        "exit_long": [{"left": "close", "op": "<", "right": "range_low"}],
+        "allow_short": False,
+    },
 }
 
 

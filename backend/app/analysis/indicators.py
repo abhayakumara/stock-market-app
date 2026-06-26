@@ -152,3 +152,23 @@ def vwap(
         cum_v += volumes[i]
         out[i] = cum_pv / cum_v if cum_v > 0 else None
     return out
+
+
+def rolling_max(values: list[float], period: int) -> Series:
+    """Highest value over each trailing window of ``period`` bars (inclusive)."""
+    if period <= 0:
+        raise ValueError("period must be positive")
+    out: Series = [None] * len(values)
+    for i in range(period - 1, len(values)):
+        out[i] = max(values[i - period + 1 : i + 1])
+    return out
+
+
+def rolling_min(values: list[float], period: int) -> Series:
+    """Lowest value over each trailing window of ``period`` bars (inclusive)."""
+    if period <= 0:
+        raise ValueError("period must be positive")
+    out: Series = [None] * len(values)
+    for i in range(period - 1, len(values)):
+        out[i] = min(values[i - period + 1 : i + 1])
+    return out

@@ -64,3 +64,9 @@ def test_atr_positive_when_defined():
 def test_vwap_single_bar_equals_typical_price():
     out = ind.vwap([12.0], [8.0], [10.0], [100.0])
     assert out[0] == (12.0 + 8.0 + 10.0) / 3
+
+
+def test_rolling_max_and_min():
+    values = [3.0, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0]
+    assert ind.rolling_max(values, 3) == [None, None, 4.0, 4.0, 5.0, 9.0, 9.0]
+    assert ind.rolling_min(values, 3) == [None, None, 1.0, 1.0, 1.0, 1.0, 2.0]

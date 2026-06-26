@@ -80,3 +80,55 @@ def test_rsi_reversion_template_builds():
         candles=candles, strategy=strat, instrument_token=TOKEN, quantity=10, warmup=20
     )
     assert len(result.equity_curve) == len(candles)
+
+
+def _ohlcv_candles(rows: list[tuple[float, float, float, float, float]]) -> list[Candle]:
+    """Build candles from (open, high, low, close, volume) tuples."""
+    base = datetime(2026, 1, 1, tzinfo=UTC)
+    return [
+        Candle(base + timedelta(minutes=5 * i), o, h, low, c, v)
+        for i, (o, h, low, c, v) in enumerate(rows)
+    ]
+
+
+def test_all_templates_backtest_without_error():
+    # A rising series with realistic high/low/volume so every template can compute.
+    rows = []
+    for i in range(160):
+        close = 100.0 + i * 0.5
+        rows.append((close - 0.2, close + 0.5, close - 0.5, close, 1000.0 + i))
+    candles = _ohlcv_candles(rows)
+    for name, cfg in TEMPLATES.items():
+        strat = build_strategy(cfg)
+        result = run_backtest(
+            candles=candles, strategy=strat, instrument_token=TOKEN, quantity=10, warmup=55
+        )
+        assert len(result.equity_curve) == len(candles), name
+
+
+def test_volume_breakout_enters_on_volume_spike():
+    # Flat-ish rising price with a normal volume baseline, then one bar with 3x volume
+    # while price is above its short average -> the strategy should take a long.
+    rows = [(100.0, 100.5, 99.5, 100.0 + i * 0.1, 1000.0) for i in range(40)]
+    rows.append((104.0, 105.0, 103.9, 104.5, 5000.0))  # volume spike on a rising close
+    rows += [(104.5, 105.0, 104.0, 104.5 + i * 0.1, 1000.0) for i in range(20)]
+    candles = _ohlcv_candles(rows)
+    strat = build_strategy(TEMPLATES["volume_breakout"])
+    result = run_backtest(
+        candles=candles, strategy=strat, instrument_token=TOKEN, quantity=10, warmup=25
+    )
+    # At least one entry fill happened (the position may still be open at the end).
+    assert any(t["side"] == "BUY" for t in result.trades)
+
+
+def test_breakout_high_enters_on_new_high():
+    # 30 bars stuck in a tight range, then a clear break above the range high.
+    rows = [(100.0, 101.0, 99.0, 100.0, 1000.0) for _ in range(30)]
+    rows.append((101.0, 105.0, 100.5, 104.0, 1000.0))  # close above the prior 20-bar high
+    rows += [(104.0, 105.0, 103.0, 104.0, 1000.0) for _ in range(20)]
+    candles = _ohlcv_candles(rows)
+    strat = build_strategy(TEMPLATES["breakout_high"])
+    result = run_backtest(
+        candles=candles, strategy=strat, instrument_token=TOKEN, quantity=10, warmup=25
+    )
+    assert any(t["side"] == "BUY" for t in result.trades)

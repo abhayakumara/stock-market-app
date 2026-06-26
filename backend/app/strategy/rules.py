@@ -14,8 +14,17 @@ by Claude from natural language, with no Python required:
       "allow_short": false
     }
 
-Operands (``left`` / ``right``) are either an indicator name, the special source
-``"close"``/``"price"``, or a number. Each rule list is an AND of its conditions.
+Operands (``left`` / ``right``) are either an indicator name, a special source
+(``"close"``/``"price"`` or ``"volume"``), or a number. Each rule list is an AND of its
+conditions.
+
+Indicator ``kind`` values understood by :func:`_build_indicator`:
+``sma``, ``ema``, ``rsi``, ``macd``, ``macd_signal``, ``boll_upper``/``boll_mid``/
+``boll_lower`` (close-based); ``vol_sma`` (average traded volume), ``vwap``
+(volume-weighted average price), ``atr`` (volatility), and ``highest``/``lowest``
+(the highest high / lowest low of the previous ``period`` bars — the breakout level).
+Any spec may include a ``"mult"`` factor that scales the resulting series (handy for a
+"volume must be 2x the average" line); it is built into the Bollinger bands directly.
 """
 
 from __future__ import annotations
@@ -36,24 +45,54 @@ _OPS = {
 }
 
 
-def _build_indicator(spec: dict, source: list[float]) -> ind.Series:
+def _build_indicator(spec: dict, candles: list[Candle]) -> ind.Series:
     kind = spec["kind"]
     period = int(spec.get("period", 14))
+    src = closes(candles)
+    series = _raw_indicator(kind, spec, period, src, candles)
+    # An optional `mult` scales the whole line (e.g. a "2x the average volume" threshold).
+    # Bollinger bands already fold `mult` into their width, so don't double-apply it there.
+    mult = spec.get("mult")
+    if mult is not None and not kind.startswith("boll_"):
+        factor = float(mult)
+        series = [None if v is None else v * factor for v in series]
+    return series
+
+
+def _raw_indicator(
+    kind: str, spec: dict, period: int, src: list[float], candles: list[Candle]
+) -> ind.Series:
     if kind == "sma":
-        return ind.sma(source, period)
+        return ind.sma(src, period)
     if kind == "ema":
-        return ind.ema(source, period)
+        return ind.ema(src, period)
     if kind == "rsi":
-        return ind.rsi(source, period)
+        return ind.rsi(src, period)
     if kind == "macd":
-        return ind.macd(source, spec.get("fast", 12), spec.get("slow", 26),
+        return ind.macd(src, spec.get("fast", 12), spec.get("slow", 26),
                         spec.get("signal", 9))[0]
     if kind == "macd_signal":
-        return ind.macd(source, spec.get("fast", 12), spec.get("slow", 26),
+        return ind.macd(src, spec.get("fast", 12), spec.get("slow", 26),
                         spec.get("signal", 9))[1]
     if kind in ("boll_upper", "boll_mid", "boll_lower"):
-        mid, upper, lower = ind.bollinger(source, spec.get("period", 20), spec.get("mult", 2.0))
+        mid, upper, lower = ind.bollinger(src, spec.get("period", 20), spec.get("mult", 2.0))
         return {"boll_upper": upper, "boll_mid": mid, "boll_lower": lower}[kind]
+
+    # Indicators that need more than the close price.
+    highs = [c.high for c in candles]
+    lows = [c.low for c in candles]
+    volumes = [c.volume for c in candles]
+    if kind == "vol_sma":
+        return ind.sma(volumes, spec.get("period", 20))
+    if kind == "vwap":
+        return ind.vwap(highs, lows, src, volumes)
+    if kind == "atr":
+        return ind.atr(highs, lows, src, period)
+    if kind in ("highest", "lowest"):
+        raw = ind.rolling_max(highs, period) if kind == "highest" else ind.rolling_min(lows, period)
+        # Shift forward one bar so the level reflects the *previous* N bars; a close
+        # beyond it is then a genuine breakout above/below the prior range.
+        return [None, *raw[:-1]]
     raise ValueError(f"unknown indicator kind: {kind}")
 
 
@@ -67,10 +106,9 @@ class RuleStrategy:
         self.allow_short = bool(self.config.get("allow_short", False))
 
     def _series(self, candles: list[Candle]) -> dict[str, ind.Series]:
-        src = closes(candles)
         out: dict[str, ind.Series] = {}
         for name, spec in self.config.get("indicators", {}).items():
-            out[name] = _build_indicator(spec, src)
+            out[name] = _build_indicator(spec, candles)
         return out
 
     def _operand(self, token: Any, series: dict[str, ind.Series], i: int) -> float | None:
@@ -78,6 +116,8 @@ class RuleStrategy:
             return float(token)
         if token in ("close", "price"):
             return self._close_i
+        if token == "volume":
+            return self._volume_i
         s = series.get(token)
         return None if s is None else s[i]
 
@@ -97,6 +137,7 @@ class RuleStrategy:
         series = self._series(candles)
         i = len(candles) - 1
         self._close_i = candles[i].close
+        self._volume_i = candles[i].volume
 
         if position == 0:
             if self._all_true(self.config.get("entry_long", []), series, i):
