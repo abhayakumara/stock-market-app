@@ -11,6 +11,7 @@ from typing import Any
 TEMPLATES: dict[str, dict[str, Any]] = {
     "sma_crossover": {
         "name": "SMA 20/50 crossover",
+        "category": "Trend (moving averages)",
         "description": "Go long when the fast SMA is above the slow SMA; exit when it falls below.",
         "indicators": {
             "fast": {"kind": "sma", "period": 20},
@@ -22,6 +23,7 @@ TEMPLATES: dict[str, dict[str, Any]] = {
     },
     "rsi_reversion": {
         "name": "RSI(14) mean reversion",
+        "category": "Momentum & bounce",
         "description": "Buy oversold (RSI < 30), exit when RSI recovers above 50.",
         "indicators": {"rsi": {"kind": "rsi", "period": 14}},
         "entry_long": [{"left": "rsi", "op": "<", "right": 30}],
@@ -30,6 +32,7 @@ TEMPLATES: dict[str, dict[str, Any]] = {
     },
     "macd_trend": {
         "name": "MACD trend",
+        "category": "Momentum & bounce",
         "description": "Long while the MACD line is above its signal line.",
         "indicators": {
             "macd": {"kind": "macd"},
@@ -41,6 +44,7 @@ TEMPLATES: dict[str, dict[str, Any]] = {
     },
     "bollinger_reversion": {
         "name": "Bollinger reversion",
+        "category": "Momentum & bounce",
         "description": "Buy when price closes below the lower band; exit at the middle band.",
         "indicators": {
             "lower": {"kind": "boll_lower", "period": 20, "mult": 2.0},
@@ -53,6 +57,7 @@ TEMPLATES: dict[str, dict[str, Any]] = {
     # --- Beginner-friendly presets (plain-English) ---------------------------------
     "price_above_average": {
         "name": "Ride the trend (price above its average)",
+        "category": "Trend (moving averages)",
         "description": (
             "Buy when the price is above its own average of the last 50 bars, which "
             "usually means it's in an up-trend. Sell when it slips back below the "
@@ -66,6 +71,7 @@ TEMPLATES: dict[str, dict[str, Any]] = {
     },
     "ema_crossover": {
         "name": "Fast vs slow average (quick trend change)",
+        "category": "Trend (moving averages)",
         "description": (
             "Watches a fast average (last 12 bars) and a slow one (last 26 bars). "
             "When the fast average rises above the slow one, the recent mood is turning "
@@ -82,6 +88,7 @@ TEMPLATES: dict[str, dict[str, Any]] = {
     },
     "volume_breakout": {
         "name": "Big-volume push (crowd is buying)",
+        "category": "Volume",
         "description": (
             "Buy only when two things happen together: a lot more shares than usual "
             "change hands (today's volume is over twice the recent average) AND the "
@@ -102,6 +109,7 @@ TEMPLATES: dict[str, dict[str, Any]] = {
     },
     "vwap_trend": {
         "name": "Above the fair price (VWAP)",
+        "category": "Volume",
         "description": (
             "VWAP is the average price weighted by how many shares traded at each "
             "level, so it's a good 'fair value' for the day. When the price is above "
@@ -115,6 +123,7 @@ TEMPLATES: dict[str, dict[str, Any]] = {
     },
     "breakout_high": {
         "name": "New-high breakout (price escapes its range)",
+        "category": "Breakout (price movement)",
         "description": (
             "Buy when the price climbs above the highest point of the last 20 bars — "
             "it has broken out of its recent range to a new high, which can kick off a "
@@ -134,6 +143,12 @@ TEMPLATES: dict[str, dict[str, Any]] = {
 
 def list_templates() -> list[dict[str, Any]]:
     return [
-        {"id": key, "name": cfg["name"], "description": cfg["description"], "config": cfg}
+        {
+            "id": key,
+            "name": cfg["name"],
+            "category": cfg.get("category", "Other"),
+            "description": cfg["description"],
+            "config": cfg,
+        }
         for key, cfg in TEMPLATES.items()
     ]

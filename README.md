@@ -90,6 +90,23 @@ Single-user application. Implemented so far (see `docs/PLAN.md`):
 - **Phase 5** — AI trading **coach** + trade auto-**review**, a trade **journal**, price
   **alerts** on the live feed, and **/metrics** observability. **Coach** page in the UI.
 
+## Strategies & the guided journey
+
+The app ships with a library of ready-made, plain-English strategy presets grouped by
+style — **trend (moving averages)**, **momentum & bounce**, **volume**, and **breakout
+(price movement)**. Each is a complete set of buy/sell rules you can backtest in one
+click. See [`docs/STRATEGIES.md`](docs/STRATEGIES.md) for a jargon-free explanation of
+every strategy.
+
+The UI guides you along the professional path — the same four steps appear on every page:
+
+1. **Learn** (Analysis) — read the chart, run screeners, get AI commentary.
+2. **Backtest** (Strategy Lab) — pick a strategy, test it on history, read a report card
+   with plain-English explanations of every metric.
+3. **Paper trade** (Trade desk) — run the same moves on live prices with virtual money.
+4. **Real money** (Live) — promote a proven strategy through the strict risk gate, then
+   arm the kill switch. Nothing reaches real money until it has earned its way there.
+
 See [`docs/RISKS.md`](docs/RISKS.md) for the full risk disclosure and
 [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the live-trading runbook (static IP, daily
 login, going-live checklist).

@@ -4,18 +4,20 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const LINKS = [
-  { href: "/", label: "Trade" },
-  { href: "/analysis", label: "Analysis" },
-  { href: "/backtest", label: "Backtest" },
-  { href: "/live", label: "Live" },
-  { href: "/coach", label: "Coach" },
+  { href: "/", label: "Trade", icon: "💹" },
+  { href: "/analysis", label: "Analysis", icon: "📈" },
+  { href: "/backtest", label: "Strategies", icon: "🧪" },
+  { href: "/live", label: "Live", icon: "💰" },
+  { href: "/coach", label: "Coach", icon: "🧠" },
 ];
 
 export function Nav() {
   const pathname = usePathname();
   return (
     <nav className="topnav">
-      <span className="brand">AI Trading</span>
+      <Link href="/" className="brand">
+        <span className="brand-mark">▲</span> AlphaDesk
+      </Link>
       <div className="links">
         {LINKS.map((l) => (
           <Link
@@ -23,11 +25,14 @@ export function Nav() {
             href={l.href}
             className={pathname === l.href ? "active" : ""}
           >
+            <span className="nav-ico" aria-hidden>{l.icon}</span>
             {l.label}
           </Link>
         ))}
       </div>
-      <span className="badge">PAPER · Zerodha Kite</span>
+      <span className="badge safe" title="You are trading virtual money. No real orders are placed here.">
+        ● PAPER MONEY
+      </span>
     </nav>
   );
 }

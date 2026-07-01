@@ -3,8 +3,8 @@ import { Nav } from "@/components/Nav";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AI Trading App",
-  description: "Paper & real trading with Zerodha Kite Connect",
+  title: "AlphaDesk — AI Trading",
+  description: "Learn, backtest, paper trade, then go live with Zerodha Kite Connect",
 };
 
 export default function RootLayout({

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { CandleChart, RSIChart } from "@/components/Charts";
+import { Journey } from "@/components/Journey";
 import {
   Alert,
   Candle,
@@ -80,6 +81,16 @@ export default function AnalysisPage() {
 
   return (
     <>
+      <div className="page-head">
+        <h1>Analysis & charts</h1>
+        <p className="lead">
+          Read the price action, spot setups with the screener, and let the AI explain what
+          it sees — the &ldquo;learn&rdquo; step before you ever test a strategy.
+        </p>
+      </div>
+
+      <Journey active="learn" />
+
       <div className="panel">
         <div className="toolbar">
           <div>

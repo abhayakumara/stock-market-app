@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Journey } from "@/components/Journey";
 import {
   Account,
   Instrument,
@@ -70,6 +71,17 @@ export default function Dashboard() {
 
   return (
     <>
+      <div className="page-head">
+        <h1>Paper trading desk</h1>
+        <p className="lead">
+          This is a full trading terminal running on <strong>virtual money</strong>. Prices
+          are live, fills and charges are modelled exactly like Zerodha — so you learn the
+          real thing without risking a rupee.
+        </p>
+      </div>
+
+      <Journey active="paper" />
+
       {account && (
         <div className="panel">
           <div className="stats">

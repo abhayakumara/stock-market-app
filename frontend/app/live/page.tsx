@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Journey } from "@/components/Journey";
 import { RiskDisclosure } from "@/components/RiskDisclosure";
 import {
   Instrument,
@@ -51,6 +52,17 @@ export default function LivePage() {
 
   return (
     <>
+      <div className="page-head">
+        <h1>Go live — real money</h1>
+        <p className="lead">
+          The final step, and the only one that risks real capital. Work through the gate
+          below: acknowledge the risks, set hard limits, promote a strategy that proved
+          itself, then arm the kill switch. You can stop instantly at any time.
+        </p>
+      </div>
+
+      <Journey active="real" />
+
       <div className={`live-banner ${armed ? "armed" : "safe"}`}>
         <div>
           <strong>{armed ? "🔴 LIVE TRADING ARMED" : "🟢 LIVE TRADING DISARMED"}</strong>
